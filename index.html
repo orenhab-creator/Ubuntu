@@ -1077,6 +1077,20 @@ header p { color: var(--muted); font-size: 0.88rem; margin-top: 6px; }
 .sug-input.invalid { border-color: #ff5555; }
 .sug-textarea { height: 90px; resize: vertical; }
 .sug-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.sug-tags-grid {
+  display: grid; grid-template-columns: repeat(3,1fr); gap: 6px; margin-bottom: 8px;
+}
+.sug-tag-check {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 0.74rem; color: var(--detail-color);
+  padding: 5px 8px; border-radius: 8px;
+  border: 1px solid var(--input-border); background: var(--input-bg);
+  cursor: pointer; transition: all 0.15s; user-select: none;
+}
+.sug-tag-check:hover { border-color: #5dd6a055; }
+.sug-tag-check input[type=checkbox] { width: 13px; height: 13px; accent-color: #5dd6a0; flex-shrink: 0; }
+.sug-tag-check.selected { border-color: #5dd6a0; background: #0e2a1a; color: #5dd6a0; }
+select.sug-select optgroup { font-weight: 700; color: var(--muted); }
 .sug-hint { font-size: 0.65rem; color: var(--sug-hint); margin-top: -10px; margin-bottom: 12px; }
 
 /* actions */
@@ -1311,6 +1325,14 @@ mark.search-hl.current {
   .suggest-fab { padding: 8px 12px; font-size: 0.7rem; }
 }
 </style>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-B7V34ZV8XZ"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-B7V34ZV8XZ');
+</script>
 </head>
 <body>
 
@@ -1379,61 +1401,121 @@ mark.search-hl.current {
 
     <!-- Steps indicator -->
     <div class="sug-steps">
-      <div class="sug-step active" id="step1-indicator">
-        <div class="sug-step-dot">1</div>
-        פרטי האירוע
-      </div>
-      <div class="sug-step" id="step2-indicator">
-        <div class="sug-step-dot">2</div>
-        תיאור ומקור
-      </div>
-      <div class="sug-step" id="step3-indicator">
-        <div class="sug-step-dot">3</div>
-        אישור
-      </div>
+      <div class="sug-step active" id="step1-indicator"><div class="sug-step-dot">1</div>פרטי האירוע</div>
+      <div class="sug-step" id="step2-indicator"><div class="sug-step-dot">2</div>תיאור ומקור</div>
+      <div class="sug-step" id="step3-indicator"><div class="sug-step-dot">3</div>אישור ושליחה</div>
     </div>
 
     <!-- Form -->
     <div id="sug-form">
 
-      <!-- Step 1: basic info -->
+      <!-- ═══ STEP 1 ═══ -->
       <div id="sug-step1" class="sug-body">
         <div class="sug-info-box">
           <strong>איך זה עובד?</strong><br>
-          ההצעה שלך תישלח ל-Google Sheets ותיבדק על-ידי המנהל. לאחר אישור — האירוע יוצג בציר הזמן לכולם.
+          ממלאים את הפרטים ← ההצעה מגיעה אלינו ← לאחר בדיקה האירוע מופיע בציר לכולם.
         </div>
 
+        <!-- Event name -->
         <label class="sug-label">שם האירוע <span class="req">*</span></label>
-        <input class="sug-input" id="sug-name" placeholder='למשל: כיבוש ירושלים על-ידי צלבנים'>
+        <input class="sug-input" id="sug-name" placeholder="למשל: כיבוש ירושלים על-ידי הצלבנים">
 
+        <!-- Year + BCE/CE selector -->
         <div class="sug-row">
           <div>
-            <label class="sug-label">שנה / תקופה <span class="req">*</span></label>
-            <input class="sug-input" id="sug-year" placeholder='1099 לספירה'>
-            <div class="sug-hint">למשל: "586 לפנה״ס" או "המאה ה-12"</div>
+            <label class="sug-label">שנה <span class="req">*</span></label>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <input class="sug-input" id="sug-year-num" placeholder="1099" style="width:90px;flex-shrink:0;" type="number" min="1">
+              <select class="sug-select" id="sug-year-bce" style="flex:1;">
+                <option value="לספירה">לספירה (CE)</option>
+                <option value='לפנה"ס'>לפנה"ס (BCE)</option>
+              </select>
+            </div>
+            <div class="sug-hint">או מלא טווח: "586–587" ← לספירה/לפנה"ס</div>
           </div>
           <div>
-            <label class="sug-label">דת</label>
-            <select class="sug-select" id="sug-rel">
-              <option value="יהדות">✡ יהדות</option>
-              <option value="נצרות">✝ נצרות</option>
-              <option value="אסלאם">☽ אסלאם</option>
-              <option value="הינדואיזם">🕉 הינדואיזם</option>
-              <option value="בודהיזם">☸ בודהיזם</option>
-              <option value="כללי">🌍 כללי / בין-דתי</option>
+            <label class="sug-label">מאה / תקופה (אם השנה לא ידועה)</label>
+            <select class="sug-select" id="sug-century">
+              <option value="">— שנה מדויקת (מלא למעלה) —</option>
+              <option value="המאה ה-21">המאה ה-21 (2001–היום)</option>
+              <option value="המאה ה-20">המאה ה-20 (1901–2000)</option>
+              <option value="המאה ה-19">המאה ה-19 (1801–1900)</option>
+              <option value="המאה ה-18">המאה ה-18 (1701–1800)</option>
+              <option value="המאה ה-17">המאה ה-17 (1601–1700)</option>
+              <option value="המאה ה-16">המאה ה-16 (1501–1600)</option>
+              <option value="המאה ה-15">המאה ה-15 (1401–1500)</option>
+              <option value="המאה ה-14">המאה ה-14 (1301–1400)</option>
+              <option value="המאה ה-13">המאה ה-13 (1201–1300)</option>
+              <option value="המאה ה-12">המאה ה-12 (1101–1200)</option>
+              <option value="המאה ה-11">המאה ה-11 (1001–1100)</option>
+              <option value="המאה ה-10">המאה ה-10 (901–1000)</option>
+              <option value="המאות 1–9">המאות 1–9 לספירה</option>
+              <option value="תקופה מקראית">תקופה מקראית (לפני 500 לפנה"ס)</option>
             </select>
           </div>
         </div>
 
-        <label class="sug-label">תקופה</label>
-        <select class="sug-select" id="sug-era">
-          <option value="biblical">תקופה מקראית (∞ – 500 לפנה"ס)</option>
-          <option value="second">בית שני וראשית הנצרות (500 לפנה"ס – 70 לסה"נ)</option>
-          <option value="talmudic">תקופת חז"ל ועלייה האסלאם (70 – 700)</option>
-          <option value="medieval">ימי הביניים (700 – 1500)</option>
-          <option value="modern">עת חדשה (1500 – 1900)</option>
-          <option value="contemporary">המאה ה-20 ואילך</option>
-        </select>
+        <!-- Religion + Era -->
+        <div class="sug-row" style="margin-top:4px;">
+          <div>
+            <label class="sug-label">דת / מסורת <span class="req">*</span></label>
+            <select class="sug-select" id="sug-rel">
+              <option value="">— בחר דת —</option>
+              <optgroup label="דתות אברהמיות">
+                <option value="יהדות">✡ יהדות</option>
+                <option value="נצרות">✝ נצרות</option>
+                <option value="אסלאם — סוני">☽ אסלאם — סוני</option>
+                <option value="אסלאם — שיעי">☽ אסלאם — שיעי</option>
+                <option value="דרוזים">✦ דרוזים</option>
+                <option value="בהאיזם">✦ בהאיזם</option>
+              </optgroup>
+              <optgroup label="דתות דהרמיות">
+                <option value="הינדואיזם">🕉 הינדואיזם</option>
+                <option value="בודהיזם">☸ בודהיזם</option>
+                <option value="גיינייזם">⚖ גיינייזם</option>
+                <option value="סיקהיזם">☬ סיקהיזם</option>
+                <option value="זורואסטריות">🔥 זורואסטריות</option>
+              </optgroup>
+              <optgroup label="אחר">
+                <option value="כללי / בין-דתי">🌍 כללי / בין-דתי</option>
+                <option value="דת עתיקה">🏺 דת עתיקה / ארכיאולוגיה</option>
+                <option value="אחר">אחר</option>
+              </optgroup>
+            </select>
+          </div>
+          <div>
+            <label class="sug-label">תקופה בציר הזמן <span class="req">*</span></label>
+            <select class="sug-select" id="sug-era">
+              <option value="">— בחר תקופה —</option>
+              <option value="biblical">📜 מקראית (∞ – 500 לפנה"ס)</option>
+              <option value="second">🏛 בית שני (500 לפנה"ס – 70 לסה"נ)</option>
+              <option value="talmudic">📚 תלמודית / עלית האסלאם (70–700)</option>
+              <option value="medieval">⚔ ימי הביניים (700–1500)</option>
+              <option value="modern">🔭 עת חדשה (1500–1900)</option>
+              <option value="contemporary">🌐 המאה ה-20 ואילך</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Category tags -->
+        <label class="sug-label" style="margin-top:10px;">קטגוריות / תגיות (בחר עד 3)</label>
+        <div class="sug-tags-grid" id="sug-tags-grid">
+          <label class="sug-tag-check"><input type="checkbox" value="מנהיגות">👑 מנהיגות</label>
+          <label class="sug-tag-check"><input type="checkbox" value="מלחמה">⚔ מלחמה</label>
+          <label class="sug-tag-check"><input type="checkbox" value="שלום">🕊 שלום</label>
+          <label class="sug-tag-check"><input type="checkbox" value="תיאולוגיה">✨ תיאולוגיה</label>
+          <label class="sug-tag-check"><input type="checkbox" value="תרבות">🎨 תרבות</label>
+          <label class="sug-tag-check"><input type="checkbox" value="מדע">🔬 מדע</label>
+          <label class="sug-tag-check"><input type="checkbox" value="פיוס">🤝 פיוס</label>
+          <label class="sug-tag-check"><input type="checkbox" value="ממלכה">👑 ממלכה</label>
+          <label class="sug-tag-check"><input type="checkbox" value="רפורמה">🔄 רפורמה</label>
+          <label class="sug-tag-check"><input type="checkbox" value="גלות">🚶 גלות</label>
+          <label class="sug-tag-check"><input type="checkbox" value="ירושלים">🕍 ירושלים</label>
+          <label class="sug-tag-check"><input type="checkbox" value="מסורת">📖 מסורת</label>
+          <label class="sug-tag-check"><input type="checkbox" value="זיכרון">🕯 זיכרון</label>
+          <label class="sug-tag-check"><input type="checkbox" value="מוסר">⚖ מוסר</label>
+          <label class="sug-tag-check"><input type="checkbox" value="נבואה">🔮 נבואה</label>
+        </div>
 
         <div class="sug-actions">
           <button class="sug-submit" onclick="sugNext(1)">המשך ←</button>
@@ -1441,20 +1523,44 @@ mark.search-hl.current {
         </div>
       </div>
 
-      <!-- Step 2: description & source -->
+      <!-- ═══ STEP 2 ═══ -->
       <div id="sug-step2" class="sug-body" style="display:none">
-        <label class="sug-label">תיאור קצר של האירוע <span class="req">*</span></label>
-        <textarea class="sug-textarea" id="sug-detail" placeholder="תיאור של 2-3 משפטים: מה קרה, מדוע חשוב, מה השפעתו..."></textarea>
 
-        <label class="sug-label">השפעה על דתות אחרות (אופציונלי)</label>
-        <input class="sug-input" id="sug-influence" placeholder='למשל: השפיע על הנצרות הקדומה בעניין...'>
+        <label class="sug-label">תיאור האירוע <span class="req">*</span></label>
+        <textarea class="sug-textarea" id="sug-detail" placeholder="2–3 משפטים: מה קרה, מדוע חשוב, מה השפעתו על הדת / ההיסטוריה..."></textarea>
+        <div class="sug-hint" id="sug-detail-count">0 / 500 תווים</div>
 
-        <label class="sug-label">מקור / קישור (אופציונלי)</label>
-        <input class="sug-input" id="sug-source" placeholder="https://he.wikipedia.org/wiki/...">
-        <div class="sug-hint">קישור לוויקיפדיה, מאמר, ספר — כל מקור אמין</div>
+        <label class="sug-label" style="margin-top:10px;">חשיבות היסטורית (בחר אחת)</label>
+        <select class="sug-select" id="sug-importance">
+          <option value="">— בחר רמת חשיבות —</option>
+          <option value="מכונן">🔴 מכונן — שינה את מהלך הדת / ההיסטוריה</option>
+          <option value="משמעותי">🟠 משמעותי — אירוע חשוב בתקופתו</option>
+          <option value="מעניין">🟡 מעניין — פרט ידוע פחות שכדאי לדעת</option>
+          <option value="קהילתי">🟢 קהילתי — אירוע מקומי / קהילתי</option>
+        </select>
 
-        <label class="sug-label">שמך (אופציונלי)</label>
-        <input class="sug-input" id="sug-submitter" placeholder="שמך או השאר ריק לאנונימי">
+        <label class="sug-label" style="margin-top:10px;">השפעה על דתות אחרות (אופציונלי)</label>
+        <textarea class="sug-textarea" id="sug-influence" style="height:60px;"
+          placeholder="האם האירוע הזה השפיע על דת אחרת? למשל: הצהרת בלפור השפיעה על הציונות הנוצרית..."></textarea>
+
+        <div class="sug-row" style="margin-top:10px;">
+          <div>
+            <label class="sug-label">מקור / קישור <span class="req">*</span></label>
+            <select class="sug-select" id="sug-source-type">
+              <option value="ויקיפדיה">📖 ויקיפדיה</option>
+              <option value="ספר">📚 ספר / מאמר אקדמי</option>
+              <option value="אתר מוסמך">🌐 אתר מוסמך</option>
+              <option value="ידע אישי">💡 ידע אישי / מסורת</option>
+            </select>
+          </div>
+          <div>
+            <label class="sug-label">קישור (URL)</label>
+            <input class="sug-input" id="sug-source" placeholder="https://he.wikipedia.org/wiki/...">
+          </div>
+        </div>
+
+        <label class="sug-label" style="margin-top:10px;">שמך (אופציונלי)</label>
+        <input class="sug-input" id="sug-submitter" placeholder="שמך — או השאר ריק לאנונימי">
 
         <div class="sug-actions">
           <button class="sug-submit" onclick="sugNext(2)">המשך לאישור ←</button>
@@ -1462,25 +1568,19 @@ mark.search-hl.current {
         </div>
       </div>
 
-      <!-- Step 3: review & send -->
+      <!-- ═══ STEP 3 ═══ -->
       <div id="sug-step3" class="sug-body" style="display:none">
-        <div style="font-size:0.72rem;color:#3a6a4a;margin-bottom:14px;font-family:Cinzel,serif;letter-spacing:1px;">סיכום ההצעה לפני שליחה</div>
-
-        <div id="sug-review" style="background:#060e0a;border:1px solid #1a3a22;border-radius:10px;padding:16px;font-size:0.82rem;line-height:1.9;color:#8ab89a;margin-bottom:18px;"></div>
-
+        <div style="font-size:0.72rem;color:#3a6a4a;margin-bottom:12px;font-family:Cinzel,serif;letter-spacing:1px;">✦ סיכום ההצעה — בדוק לפני שליחה</div>
+        <div id="sug-review" style="background:#060e0a;border:1px solid #1a3a22;border-radius:10px;padding:16px;font-size:0.82rem;line-height:2;color:#8ab89a;margin-bottom:16px;"></div>
         <div class="sug-info-box">
-          📋 ההצעה תישמר ב-<strong>Google Sheets</strong> ותיבדק לפני פרסום.<br>
-          לאחר אישור היא תופיע בציר הזמן לכל המשתמשים.
+          📋 ההצעה תישלח ל-<strong>Google Sheets</strong> ותיבדק לפני פרסום.<br>
+          לאחר אישור תופיע בציר הזמן לכל המשתמשים עם תג <strong style="color:#5dd6a0;">✦ קהילה</strong>.
         </div>
-
         <div class="sug-actions">
-          <button class="sug-submit" id="sug-send-btn" onclick="submitSuggestion()">
-            <span>📨</span> שלח הצעה
-          </button>
+          <button class="sug-submit" id="sug-send-btn" onclick="submitSuggestion()"><span>📨</span> שלח הצעה</button>
           <button class="sug-cancel" onclick="sugBack(2)">← חזרה לעריכה</button>
         </div>
       </div>
-
     </div>
 
     <!-- Success state -->
@@ -1488,13 +1588,43 @@ mark.search-hl.current {
       <div class="sug-check">✅</div>
       <h3>ההצעה נשלחה בהצלחה!</h3>
       <p>האירוע <strong id="sug-sent-name" style="color:#5dd6a0"></strong> התקבל ונשמר לבדיקה.</p>
-      <p>לאחר אישור המנהל — הוא יופיע בציר הזמן לכולם.</p>
+      <p>לאחר אישור המנהל יופיע בציר לכולם עם תג ✦ קהילה.</p>
       <small>תודה על התרומה לפרויקט ✦</small>
       <br><br>
       <button class="sug-cancel" onclick="closeSuggestDirect()" style="margin:0 auto;display:block;padding:10px 28px;">סגור</button>
     </div>
 
   </div>
+</div>
+
+<!-- ===== SHEET URL SETUP PANEL ===== -->
+<div id="sheet-setup-panel" style="display:none;position:fixed;bottom:90px;left:24px;
+  z-index:160;background:var(--surface);border:1px solid #5dd6a055;border-radius:16px;
+  padding:18px 20px;width:340px;max-width:90vw;box-shadow:0 8px 32px #00000088;direction:rtl;">
+  <div style="font-family:Cinzel,serif;font-size:0.82rem;color:#5dd6a0;margin-bottom:10px;font-weight:700;">
+    ⚙️ חיבור Google Sheets
+  </div>
+  <div style="font-size:0.75rem;color:var(--muted);line-height:1.6;margin-bottom:12px;">
+    הדבק את ה-URL של Google Sheets שלך (פורסם כ-CSV).<br>
+    <a href="https://support.google.com/docs/answer/37579" target="_blank"
+      style="color:#5dd6a055;font-size:0.68rem;">איך מפרסמים כ-CSV? ←</a>
+  </div>
+  <input id="sheet-url-input" type="url" dir="ltr"
+    style="width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--input-border);
+    background:var(--input-bg);color:var(--text);font-size:0.75rem;margin-bottom:10px;box-sizing:border-box;"
+    placeholder="https://docs.google.com/spreadsheets/d/.../export?format=csv">
+  <div style="display:flex;gap:8px;">
+    <button onclick="saveSheetUrl()" style="flex:1;padding:8px;border-radius:8px;
+      background:#5dd6a0;color:#080810;border:none;font-weight:700;font-size:0.78rem;cursor:pointer;">
+      💾 שמור וטען
+    </button>
+    <button onclick="document.getElementById('sheet-setup-panel').style.display='none'"
+      style="padding:8px 14px;border-radius:8px;background:var(--surface);
+      border:1px solid var(--border);color:var(--muted);font-size:0.78rem;cursor:pointer;">
+      ✕
+    </button>
+  </div>
+  <div id="sheet-status" style="font-size:0.72rem;margin-top:8px;color:#5dd6a0;display:none;"></div>
 </div>
 
 <!-- ===== SUGGEST FAB ===== -->
@@ -3469,27 +3599,129 @@ updateGrid();
 const SHEET_CSV_URL = '';  // לדוגמה: 'https://docs.google.com/spreadsheets/d/SHEET_ID/export?format=csv'
 
 const SHEET_COL = {
-  timestamp: 0,
-  name:      1,
-  year:      2,
-  rel:       3,
-  era:       4,
-  detail:    5,
-  influence: 6,
-  source:    7,
-  submitter: 8,
-  approved:  9,  // עמודה ידנית — כתוב "כן" לאישור
+  timestamp:  0,
+  name:       1,
+  year:       2,
+  rel:        3,
+  era:        4,
+  detail:     5,
+  importance: 6,
+  tags:       7,
+  influence:  8,
+  source:     9,
+  submitter:  10,
+  approved:   11,  // ← כתוב "כן" כאן לאישור
+  notes:      12,
 };
 
 const REL_MAP = {
   'יהדות':'jud','Judaism':'jud','jud':'jud',
   'נצרות':'chr','Christianity':'chr','chr':'chr',
-  'אסלאם':'isl','Islam':'isl','isl':'isl',
+  'אסלאם':'isl','אסלאם — סוני':'isl','אסלאם — שיעי':'isl',
+  'Islam':'isl','isl':'isl',
+  'דרוזים':'isl','בהאיזם':'isl',
   'הינדואיזם':'hin','Hinduism':'hin','hin':'hin',
+  'זורואסטריות':'hin','גיינייזם':'hin','סיקהיזם':'hin',
   'בודהיזם':'bud','Buddhism':'bud','bud':'bud',
+  'כללי / בין-דתי':'jud','דת עתיקה':'jud','אחר':'jud',
 };
 
+function toggleSheetSetup() {
+  const panel = document.getElementById('sheet-setup-panel');
+  const isOpen = panel.style.display !== 'none';
+  panel.style.display = isOpen ? 'none' : 'block';
+  if (!isOpen) {
+    // Pre-fill with saved URL
+    const saved = localStorage.getItem('sheet_csv_url') || SHEET_CSV_URL || '';
+    document.getElementById('sheet-url-input').value = saved;
+  }
+}
+
+async function saveSheetUrl() {
+  const url = document.getElementById('sheet-url-input').value.trim();
+  const status = document.getElementById('sheet-status');
+  if (!url) { status.style.display='block'; status.style.color='#ff6655'; status.textContent='נא להזין URL'; return; }
+  if (!url.includes('spreadsheets') && !url.includes('csv')) {
+    status.style.display='block'; status.style.color='#ff6655';
+    status.textContent='URL לא נראה תקין — ודא שפרסמת כ-CSV'; return;
+  }
+  status.style.display='block'; status.style.color='#5dd6a0';
+  status.textContent='⏳ מתחבר ל-Sheets...';
+
+  // Save to localStorage so persists across sessions
+  localStorage.setItem('sheet_csv_url', url);
+
+  // Try loading
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const text = await res.text();
+    const rows = parseCSV(text);
+    const approvedRows = rows.slice(1).filter(r => {
+      const a = (r[SHEET_COL.approved]||'').trim().toLowerCase();
+      return a === 'כן' || a === 'yes';
+    });
+    status.textContent = `✅ מחובר! ${approvedRows.length} אירועים מאושרים נמצאו.`;
+    // Actually load them
+    await loadCommunityEventsFromUrl(url);
+    setTimeout(() => { document.getElementById('sheet-setup-panel').style.display='none'; }, 2000);
+  } catch(e) {
+    status.style.color='#ff6655';
+    status.textContent = '❌ שגיאה: ' + e.message + ' — ודא שה-Sheets פורסם כ-CSV ציבורי';
+  }
+}
+
+async function loadCommunityEventsFromUrl(url) {
+  try {
+    const res  = await fetch(url);
+    const text = await res.text();
+    // Remove old community events first
+    const before = events.length;
+    events.splice(0, events.length, ...events.filter(e => !e.community));
+    const rows = parseCSV(text);
+    if (rows.length < 2) return;
+    let added = 0;
+    rows.slice(1).forEach(row => {
+      const approved = (row[SHEET_COL.approved] || '').trim().toLowerCase();
+      if (approved !== 'כן' && approved !== 'yes') return;
+      const relCode = REL_MAP[row[SHEET_COL.rel]?.trim()] || 'jud';
+      const yearStr = row[SHEET_COL.year]?.trim() || '';
+      const yearNum = parseYearStr(yearStr);
+      const eraId   = row[SHEET_COL.era]?.trim() || 'contemporary';
+      const rawTags = (row[SHEET_COL.tags] || '').trim();
+      const parsedTags = rawTags ? rawTags.split(',').map(t=>t.trim()).filter(Boolean) : [];
+      if (!parsedTags.includes('קהילה')) parsedTags.push('קהילה');
+      const stableId = 'community_' + (row[SHEET_COL.name]||'').trim().replace(/\s+/g,'_').slice(0,20) + '_' + added;
+      const ev = {
+        id: stableId, era: eraId, year: yearStr, yearNum, rel: relCode,
+        name:       row[SHEET_COL.name]?.trim() || '',
+        detail:     row[SHEET_COL.detail]?.trim() || '',
+        importance: row[SHEET_COL.importance]?.trim() || '',
+        tags:       parsedTags,
+        influences: row[SHEET_COL.influence]?.trim()
+                      ? [{targetId:'', desc: row[SHEET_COL.influence].trim()}] : [],
+        source:     row[SHEET_COL.source]?.trim() || '',
+        submitter:  row[SHEET_COL.submitter]?.trim() || '',
+        community:  true,
+      };
+      if (!ev.name) return;
+      events.push(ev);
+      evtMap[ev.id] = ev;
+      added++;
+    });
+    if (added > 0) { render(); showCommunityBanner(added); }
+  } catch(e) { console.warn('שגיאה בטעינת Sheets:', e); }
+}
+
 async function loadCommunityEvents() {
+  // Try saved URL from localStorage first, then fall back to hardcoded
+  const savedUrl = localStorage.getItem('sheet_csv_url');
+  const url = savedUrl || SHEET_CSV_URL;
+  if (!url) return;
+  await loadCommunityEventsFromUrl(url);
+}
+
+async function loadCommunityEvents_ORIGINAL() {
   if (!SHEET_CSV_URL) return;
   try {
     const res  = await fetch(SHEET_CSV_URL);
@@ -3507,17 +3739,26 @@ async function loadCommunityEvents() {
       const yearNum = parseYearStr(yearStr);
       const eraId   = row[SHEET_COL.era]?.trim() || 'contemporary';
 
+      // Parse tags from CSV (comma separated inside the cell)
+      const rawTags = (row[SHEET_COL.tags] || '').trim();
+      const parsedTags = rawTags ? rawTags.split(',').map(t=>t.trim()).filter(Boolean) : [];
+      if (!parsedTags.includes('קהילה')) parsedTags.push('קהילה');
+
+      // Stable ID from name + year
+      const stableId = 'community_' + (row[SHEET_COL.name]||'').trim().replace(/\s+/g,'_').slice(0,20) + '_' + added;
+
       const ev = {
-        id:         'community_' + added,
+        id:         stableId,
         era:        eraId,
         year:       yearStr,
         yearNum:    yearNum,
         rel:        relCode,
         name:       row[SHEET_COL.name]?.trim() || '',
         detail:     row[SHEET_COL.detail]?.trim() || '',
-        tags:       ['קהילה'],
+        importance: row[SHEET_COL.importance]?.trim() || '',
+        tags:       parsedTags,
         influences: row[SHEET_COL.influence]?.trim()
-                      ? [{ rel:'', desc: row[SHEET_COL.influence].trim() }] : [],
+                      ? [{ targetId:'', desc: row[SHEET_COL.influence].trim() }] : [],
         source:     row[SHEET_COL.source]?.trim() || '',
         submitter:  row[SHEET_COL.submitter]?.trim() || '',
         community:  true,
@@ -4464,36 +4705,91 @@ function sugGoTo(step) {
   });
 }
 
+// Helper: get assembled year string from new fields
+function getSugYear() {
+  const num = document.getElementById('sug-year-num').value.trim();
+  const bce = document.getElementById('sug-year-bce').value;
+  const cent = document.getElementById('sug-century').value;
+  if (cent) return cent;
+  if (num) return num + ' ' + bce;
+  return '';
+}
+
+// Helper: get selected tags
+function getSugTags() {
+  return [...document.querySelectorAll('#sug-tags-grid input[type=checkbox]:checked')]
+    .map(cb => cb.value).join(', ') || '—';
+}
+
+// Live character counter for detail textarea
+document.addEventListener('DOMContentLoaded', () => {
+  const det = document.getElementById('sug-detail');
+  const cnt = document.getElementById('sug-detail-count');
+  if (det && cnt) {
+    det.addEventListener('input', () => {
+      cnt.textContent = det.value.length + ' / 500 תווים';
+      cnt.style.color = det.value.length > 450 ? '#ff8855' : '';
+    });
+  }
+
+  // Limit tag checkboxes to 3
+  document.querySelectorAll('#sug-tags-grid input[type=checkbox]').forEach(cb => {
+    cb.addEventListener('change', function() {
+      const checked = document.querySelectorAll('#sug-tags-grid input:checked');
+      if (checked.length > 3) { this.checked = false; return; }
+      this.closest('.sug-tag-check').classList.toggle('selected', this.checked);
+    });
+  });
+});
+
 function sugNext(fromStep) {
   if (fromStep === 1) {
     const name = document.getElementById('sug-name').value.trim();
-    const year = document.getElementById('sug-year').value.trim();
+    const year = getSugYear();
+    const rel  = document.getElementById('sug-rel').value;
+    const era  = document.getElementById('sug-era').value;
     let ok = true;
     if (!name) { document.getElementById('sug-name').classList.add('invalid'); ok = false; }
     else document.getElementById('sug-name').classList.remove('invalid');
-    if (!year) { document.getElementById('sug-year').classList.add('invalid'); ok = false; }
-    else document.getElementById('sug-year').classList.remove('invalid');
+    if (!year) {
+      document.getElementById('sug-year-num').classList.add('invalid');
+      ok = false;
+    } else document.getElementById('sug-year-num').classList.remove('invalid');
+    if (!rel)  { document.getElementById('sug-rel').classList.add('invalid'); ok = false; }
+    else document.getElementById('sug-rel').classList.remove('invalid');
+    if (!era)  { document.getElementById('sug-era').classList.add('invalid'); ok = false; }
+    else document.getElementById('sug-era').classList.remove('invalid');
     if (!ok) return;
     sugGoTo(2);
   } else if (fromStep === 2) {
     const detail = document.getElementById('sug-detail').value.trim();
     if (!detail) { document.getElementById('sug-detail').classList.add('invalid'); return; }
     document.getElementById('sug-detail').classList.remove('invalid');
-    // Build review
-    const rel  = document.getElementById('sug-rel').value;
-    const era  = document.getElementById('sug-era').options[document.getElementById('sug-era').selectedIndex].text;
+
+    // Build review card
     const name = document.getElementById('sug-name').value.trim();
-    const year = document.getElementById('sug-year').value.trim();
+    const year = getSugYear();
+    const rel  = document.getElementById('sug-rel').value;
+    const eraEl = document.getElementById('sug-era');
+    const era  = eraEl.options[eraEl.selectedIndex].text;
+    const imp  = document.getElementById('sug-importance').value || '—';
+    const tags = getSugTags();
     const src  = document.getElementById('sug-source').value.trim();
+    const srcType = document.getElementById('sug-source-type').value;
+    const inf  = document.getElementById('sug-influence').value.trim();
     const sub  = document.getElementById('sug-submitter').value.trim() || 'אנונימי';
+
     document.getElementById('sug-review').innerHTML = `
-      <div><b style="color:#5dd6a0">שם:</b> ${name}</div>
-      <div><b style="color:#5dd6a0">שנה:</b> ${year}</div>
-      <div><b style="color:#5dd6a0">דת:</b> ${rel}</div>
-      <div><b style="color:#5dd6a0">תקופה:</b> ${era}</div>
-      <div><b style="color:#5dd6a0">תיאור:</b> ${detail}</div>
-      ${src ? `<div><b style="color:#5dd6a0">מקור:</b> <a href="${src}" target="_blank" style="color:#5dd6a0">${src}</a></div>` : ''}
-      <div><b style="color:#5dd6a0">מגיש:</b> ${sub}</div>
+      <div><b style="color:#5dd6a0">📌 שם:</b> ${name}</div>
+      <div><b style="color:#5dd6a0">📅 שנה:</b> ${year}</div>
+      <div><b style="color:#5dd6a0">✦ דת:</b> ${rel}</div>
+      <div><b style="color:#5dd6a0">⏱ תקופה:</b> ${era}</div>
+      <div><b style="color:#5dd6a0">🔴 חשיבות:</b> ${imp}</div>
+      <div><b style="color:#5dd6a0">🏷 תגיות:</b> ${tags}</div>
+      <div><b style="color:#5dd6a0">📝 תיאור:</b> ${detail}</div>
+      ${inf ? `<div><b style="color:#5dd6a0">🔗 השפעה:</b> ${inf}</div>` : ''}
+      <div><b style="color:#5dd6a0">📖 מקור:</b> ${srcType}${src ? ' — <a href="'+src+'" target="_blank" style="color:#5dd6a0">'+src+'</a>' : ''}</div>
+      <div><b style="color:#5dd6a0">👤 מגיש:</b> ${sub}</div>
     `;
     sugGoTo(3);
   }
@@ -4510,14 +4806,16 @@ function submitSuggestion() {
     const name = document.getElementById('sug-name').value.trim();
     const suggestion = {
       name,
-      year:      document.getElementById('sug-year').value.trim(),
-      rel:       document.getElementById('sug-rel').value,
-      era:       document.getElementById('sug-era').value,
-      detail:    document.getElementById('sug-detail').value.trim(),
-      influence: document.getElementById('sug-influence').value.trim(),
-      source:    document.getElementById('sug-source').value.trim(),
-      submitter: document.getElementById('sug-submitter').value.trim() || 'אנונימי',
-      timestamp: new Date().toISOString(),
+      year:       getSugYear(),
+      rel:        document.getElementById('sug-rel').value,
+      era:        document.getElementById('sug-era').value,
+      detail:     document.getElementById('sug-detail').value.trim(),
+      importance: document.getElementById('sug-importance').value,
+      tags:       getSugTags(),
+      influence:  document.getElementById('sug-influence').value.trim(),
+      source:     document.getElementById('sug-source-type').value + ': ' + document.getElementById('sug-source').value.trim(),
+      submitter:  document.getElementById('sug-submitter').value.trim() || 'אנונימי',
+      timestamp:  new Date().toISOString(),
     };
     // שמור ב-localStorage
     const existing = JSON.parse(localStorage.getItem('pending_suggestions') || '[]');
@@ -4547,12 +4845,14 @@ function submitSuggestion() {
 
   const fields = {
     [FORM_FIELDS.name]:      name,
-    [FORM_FIELDS.year]:      document.getElementById('sug-year').value.trim(),
+    [FORM_FIELDS.year]:      getSugYear(),
     [FORM_FIELDS.rel]:       document.getElementById('sug-rel').value,
     [FORM_FIELDS.era]:       document.getElementById('sug-era').value,
-    [FORM_FIELDS.detail]:    document.getElementById('sug-detail').value.trim(),
+    [FORM_FIELDS.detail]:    document.getElementById('sug-detail').value.trim()
+                             + (document.getElementById('sug-importance').value ? ' [חשיבות: ' + document.getElementById('sug-importance').value + ']' : '')
+                             + (getSugTags() !== '—' ? ' [תגיות: ' + getSugTags() + ']' : ''),
     [FORM_FIELDS.influence]: document.getElementById('sug-influence').value.trim(),
-    [FORM_FIELDS.source]:    document.getElementById('sug-source').value.trim(),
+    [FORM_FIELDS.source]:    (document.getElementById('sug-source-type').value + ': ' + document.getElementById('sug-source').value.trim()).trim(),
     [FORM_FIELDS.submitter]: document.getElementById('sug-submitter').value.trim() || 'אנונימי',
   };
 
