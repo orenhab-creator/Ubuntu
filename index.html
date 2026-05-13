@@ -1573,11 +1573,12 @@ mark.search-hl.current {
         <div style="font-size:0.72rem;color:#3a6a4a;margin-bottom:12px;font-family:Cinzel,serif;letter-spacing:1px;">✦ סיכום ההצעה — בדוק לפני שליחה</div>
         <div id="sug-review" style="background:#060e0a;border:1px solid #1a3a22;border-radius:10px;padding:16px;font-size:0.82rem;line-height:2;color:#8ab89a;margin-bottom:16px;"></div>
         <div class="sug-info-box">
-          📋 ההצעה תישלח ל-<strong>Google Sheets</strong> ותיבדק לפני פרסום.<br>
-          לאחר אישור תופיע בציר הזמן לכל המשתמשים עם תג <strong style="color:#5dd6a0;">✦ קהילה</strong>.
+          📋 לחיצה על "שלח" תפתח את <strong>טופס Google</strong> ממולא מראש בכרטיסייה חדשה.<br>
+          <strong>לחץ שם על "שלח"</strong> — וההגשה תגיע אלינו לאישור.<br>
+          לאחר אישור תופיע בציר עם תג <strong style="color:#5dd6a0;">✦ קהילה</strong>.
         </div>
         <div class="sug-actions">
-          <button class="sug-submit" id="sug-send-btn" onclick="submitSuggestion()"><span>📨</span> שלח הצעה</button>
+          <button class="sug-submit" id="sug-send-btn" onclick="submitSuggestion()"><span>📨</span> פתח טופס ושלח</button>
           <button class="sug-cancel" onclick="sugBack(2)">← חזרה לעריכה</button>
         </div>
       </div>
@@ -1587,9 +1588,9 @@ mark.search-hl.current {
     <div class="sug-success" id="sug-success">
       <div class="sug-check">✅</div>
       <h3>ההצעה נשלחה בהצלחה!</h3>
-      <p>האירוע <strong id="sug-sent-name" style="color:#5dd6a0"></strong> התקבל ונשמר לבדיקה.</p>
-      <p>לאחר אישור המנהל יופיע בציר לכולם עם תג ✦ קהילה.</p>
-      <small>תודה על התרומה לפרויקט ✦</small>
+      <p>פתחנו את <strong>טופס Google</strong> ממולא מראש עם פרטי האירוע.</p>
+      <p style="color:#ffaa44;font-weight:700;">⚠️ חשוב — לחץ "שלח" בטופס שנפתח כדי להשלים את ההגשה!</p>
+      <small>לאחר אישור המנהל — האירוע יופיע בציר עם תג ✦ קהילה</small>
       <br><br>
       <button class="sug-cancel" onclick="closeSuggestDirect()" style="margin:0 auto;display:block;padding:10px 28px;">סגור</button>
     </div>
@@ -4802,8 +4803,31 @@ function sugBack(toStep) { sugGoTo(toStep); }
 
 function submitSuggestion() {
   const btn = document.getElementById('sug-send-btn');
+  const sugName = document.getElementById('sug-name').value.trim();
 
-  // בדיקה — האם ה-Form ID הוגדר
+  // בנה URL מלא עם כל הערכים ממולאים מראש ופתח את טופס גוגל
+  const viewUrl = GOOGLE_FORM_URL.replace('/formResponse', '/viewform');
+  const formParams = new URLSearchParams();
+  formParams.set(FORM_FIELDS.name,      sugName);
+  formParams.set(FORM_FIELDS.year,      getSugYear());
+  formParams.set(FORM_FIELDS.rel,       document.getElementById('sug-rel').value);
+  formParams.set(FORM_FIELDS.era,       document.getElementById('sug-era').value);
+  formParams.set(FORM_FIELDS.detail,    document.getElementById('sug-detail').value.trim()
+                                    + (document.getElementById('sug-importance').value ? ' [חשיבות: ' + document.getElementById('sug-importance').value + ']' : '')
+                                    + (getSugTags() !== '—' ? ' [תגיות: ' + getSugTags() + ']' : ''));
+  formParams.set(FORM_FIELDS.influence, document.getElementById('sug-influence').value.trim());
+  formParams.set(FORM_FIELDS.source,    (document.getElementById('sug-source-type').value + ': ' + document.getElementById('sug-source').value.trim()).trim());
+  formParams.set(FORM_FIELDS.submitter, document.getElementById('sug-submitter').value.trim() || 'אנונימי');
+
+  // פתח את טופס גוגל ממולא מראש בכרטיסייה חדשה
+  const fullUrl = viewUrl + '?usp=pp_url&' + formParams.toString();
+  window.open(fullUrl, '_blank');
+
+  // הצג הצלחה
+  showSugSuccess(sugName);
+  return;
+
+  // בדיקה — האם ה-Form ID הוגדר (קוד ישן — לא מגיע לכאן)
   if (GOOGLE_FORM_URL.includes('YOUR_FORM_ID_HERE')) {
     // אם אין Form ID — שמור מקומית והראה הצלחה
     const name = document.getElementById('sug-name').value.trim();
