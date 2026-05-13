@@ -4828,23 +4828,11 @@ function submitSuggestion() {
     return;
   }
 
-  // שיטת ה-iframe — עובד ב-GitHub Pages ובכל שרת
+  // שיטת fetch עם no-cors — עובדת מכל מקום כולל file://
   btn.disabled = true;
   btn.innerHTML = '<span>⏳</span> שולח...';
 
   const name = document.getElementById('sug-name').value.trim();
-
-  // בנה form אמיתי ושלח ל-iframe מוסתר
-  const iframe = document.createElement('iframe');
-  iframe.name = 'sug-iframe-target';
-  iframe.style.display = 'none';
-  document.body.appendChild(iframe);
-
-  const form = document.createElement('form');
-  form.method = 'POST';
-  form.action = GOOGLE_FORM_URL;
-  form.target = 'sug-iframe-target';
-  form.style.display = 'none';
 
   const fields = {
     [FORM_FIELDS.name]:      name,
@@ -4859,25 +4847,21 @@ function submitSuggestion() {
     [FORM_FIELDS.submitter]: document.getElementById('sug-submitter').value.trim() || 'אנונימי',
   };
 
-  Object.entries(fields).forEach(([key, val]) => {
-    const input = document.createElement('input');
-    input.type = 'hidden';
-    input.name = key;
-    input.value = val;
-    form.appendChild(input);
-  });
+  // בנה URL עם פרמטרים (GET request ל-Forms — עובד עם no-cors)
+  const params = new URLSearchParams();
+  Object.entries(fields).forEach(([k,v]) => { if(v) params.append(k, v); });
+  const submitUrl = GOOGLE_FORM_URL + '?' + params.toString();
 
-  document.body.appendChild(form);
-  form.submit();
-
-  // המתן 1.5 שניות ואז הצג הצלחה (no-cors — לא ניתן לדעת אם הצליח)
-  setTimeout(() => {
-    form.remove();
-    iframe.remove();
+  fetch(submitUrl, { method: 'POST', mode: 'no-cors',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: params.toString()
+  })
+  .catch(() => {}) // no-cors תמיד נותן שגיאת network — זה תקין
+  .finally(() => {
     btn.disabled = false;
     btn.innerHTML = '<span>📨</span> שלח הצעה';
     showSugSuccess(name);
-  }, 1500);
+  });
 }
 
 function showSugSuccess(name) {
