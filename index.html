@@ -3596,22 +3596,22 @@ updateGrid();
 // ================================================================
 
 // ← הכנס כאן את ה-URL שקיבלת בשלב 4
-const SHEET_CSV_URL = '';  // לדוגמה: 'https://docs.google.com/spreadsheets/d/SHEET_ID/export?format=csv'
+const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vROQ7ja4UldKteNQ6ByEKmhDarzuz38YXi29k8XDhXHWe7cMlRWEqLFbrW69F6qmgxQjsrSt0O_LH0g/pub?gid=985949813&single=true&output=csv';
 
 const SHEET_COL = {
-  timestamp:  0,
-  name:       1,
-  year:       2,
-  rel:        3,
-  era:        4,
-  detail:     5,
-  importance: 6,
-  tags:       7,
-  influence:  8,
-  source:     9,
-  submitter:  10,
-  approved:   11,  // ← כתוב "כן" כאן לאישור
-  notes:      12,
+  // Google Forms יוצר עמודות בסדר זה אוטומטית:
+  timestamp:  0,   // A - חותמת זמן (אוטומטי)
+  name:       1,   // B - שם האירוע
+  year:       2,   // C - שנה
+  rel:        3,   // D - דת
+  era:        4,   // E - תקופה
+  detail:     5,   // F - תיאור
+  influence:  6,   // G - השפעות
+  source:     7,   // H - מקור
+  submitter:  8,   // I - שם מגיש
+  approved:   9,   // J - כתוב "כן" כאן לאישור ← (עמודה ידנית)
+  importance: -1,  // לא קיים ב-Forms
+  tags:       -1,  // לא קיים ב-Forms
 };
 
 const REL_MAP = {
@@ -3655,7 +3655,8 @@ async function saveSheetUrl() {
   try {
     const res = await fetch(url);
     if (!res.ok) throw new Error('HTTP ' + res.status);
-    const text = await res.text();
+    const buffer = await res.arrayBuffer();
+    const text = new TextDecoder('utf-8').decode(buffer);
     const rows = parseCSV(text);
     const approvedRows = rows.slice(1).filter(r => {
       const a = (r[SHEET_COL.approved]||'').trim().toLowerCase();
@@ -3674,7 +3675,8 @@ async function saveSheetUrl() {
 async function loadCommunityEventsFromUrl(url) {
   try {
     const res  = await fetch(url);
-    const text = await res.text();
+    const buffer = await res.arrayBuffer();
+    const text = new TextDecoder('utf-8').decode(buffer);
     // Remove old community events first
     const before = events.length;
     events.splice(0, events.length, ...events.filter(e => !e.community));
@@ -3688,7 +3690,7 @@ async function loadCommunityEventsFromUrl(url) {
       const yearStr = row[SHEET_COL.year]?.trim() || '';
       const yearNum = parseYearStr(yearStr);
       const eraId   = row[SHEET_COL.era]?.trim() || 'contemporary';
-      const rawTags = (row[SHEET_COL.tags] || '').trim();
+      const rawTags = (SHEET_COL.tags >= 0 ? row[SHEET_COL.tags] || '' : '').trim();
       const parsedTags = rawTags ? rawTags.split(',').map(t=>t.trim()).filter(Boolean) : [];
       if (!parsedTags.includes('קהילה')) parsedTags.push('קהילה');
       const stableId = 'community_' + (row[SHEET_COL.name]||'').trim().replace(/\s+/g,'_').slice(0,20) + '_' + added;
@@ -3696,7 +3698,7 @@ async function loadCommunityEventsFromUrl(url) {
         id: stableId, era: eraId, year: yearStr, yearNum, rel: relCode,
         name:       row[SHEET_COL.name]?.trim() || '',
         detail:     row[SHEET_COL.detail]?.trim() || '',
-        importance: row[SHEET_COL.importance]?.trim() || '',
+        importance: (SHEET_COL.importance >= 0 ? row[SHEET_COL.importance]?.trim() : '') || '',
         tags:       parsedTags,
         influences: row[SHEET_COL.influence]?.trim()
                       ? [{targetId:'', desc: row[SHEET_COL.influence].trim()}] : [],
@@ -3725,7 +3727,8 @@ async function loadCommunityEvents_ORIGINAL() {
   if (!SHEET_CSV_URL) return;
   try {
     const res  = await fetch(SHEET_CSV_URL);
-    const text = await res.text();
+    const buffer = await res.arrayBuffer();
+    const text = new TextDecoder('utf-8').decode(buffer);
     const rows = parseCSV(text);
     if (rows.length < 2) return;
 
@@ -3740,7 +3743,7 @@ async function loadCommunityEvents_ORIGINAL() {
       const eraId   = row[SHEET_COL.era]?.trim() || 'contemporary';
 
       // Parse tags from CSV (comma separated inside the cell)
-      const rawTags = (row[SHEET_COL.tags] || '').trim();
+      const rawTags = (SHEET_COL.tags >= 0 ? row[SHEET_COL.tags] || '' : '').trim();
       const parsedTags = rawTags ? rawTags.split(',').map(t=>t.trim()).filter(Boolean) : [];
       if (!parsedTags.includes('קהילה')) parsedTags.push('קהילה');
 
@@ -3755,7 +3758,7 @@ async function loadCommunityEvents_ORIGINAL() {
         rel:        relCode,
         name:       row[SHEET_COL.name]?.trim() || '',
         detail:     row[SHEET_COL.detail]?.trim() || '',
-        importance: row[SHEET_COL.importance]?.trim() || '',
+        importance: (SHEET_COL.importance >= 0 ? row[SHEET_COL.importance]?.trim() : '') || '',
         tags:       parsedTags,
         influences: row[SHEET_COL.influence]?.trim()
                       ? [{ targetId:'', desc: row[SHEET_COL.influence].trim() }] : [],
@@ -4666,16 +4669,16 @@ function closeWikiDirect() {
 // 2. לחץ על שלח > קישור, ופתח את ה-prefilled link
 // 3. העתק את ה-entry.XXXXXXXXXX של כל שדה
 // 4. החלף את הערכים בהמשך:
-const GOOGLE_FORM_URL = 'https://docs.google.com/forms/d/e/YOUR_FORM_ID_HERE/formResponse';
+const GOOGLE_FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSeZXKCgFc0xszfzvibMzhskE_QMgP1828SEg9nzdHLccHXITg/formResponse';
 const FORM_FIELDS = {
-  name:      'entry.1000000001',
-  year:      'entry.1000000002',
-  rel:       'entry.1000000003',
-  era:       'entry.1000000004',
-  detail:    'entry.1000000005',
-  influence: 'entry.1000000006',
-  source:    'entry.1000000007',
-  submitter: 'entry.1000000008',
+  name:      'entry.850832511',
+  year:      'entry.1093698206',
+  rel:       'entry.1922557317',
+  era:       'entry.1344707320',
+  detail:    'entry.635392677',
+  influence: 'entry.1816046375',
+  source:    'entry.380874314',
+  submitter: 'entry.286313738',
 };
 
 function openSuggest() {
